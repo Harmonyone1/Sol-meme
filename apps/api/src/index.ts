@@ -10,7 +10,8 @@ import { apiKeyAuth } from './auth';
 import { postStrategy } from './routes/strategies';
 import { postTradeSimulate } from './routes/trades';
 import { postKillSwitch } from './routes/execution';
-import { postExecute, getKillStatus, getJupiterQuote } from './routes/execute';
+import { postExecute, getKillStatus } from './routes/execute';
+import { jupiterQuoteProxy } from './routes/quotes';
 import { heliusWebhook } from './routes/webhooks';
 import { getStrategies, getTrades } from './routes/read';
 import { getCandidates, getPositions, getAlerts, getTradeById, getStrategyById } from './routes/read_more';
@@ -35,7 +36,7 @@ app.get('/api/alerts', getAlerts);
 app.get('/api/trades/:id', getTradeById);
 app.get('/api/strategies/:id', getStrategyById);
 app.get('/api/execution/kill', getKillStatus(redis));
-app.get('/api/quotes/jupiter', getJupiterQuote);
+app.get('/api/quotes/jupiter', jupiterQuoteProxy(redis));
 app.post('/webhooks/helius', heliusWebhook(redis));
 
 // Authenticated routes when API_KEY is set
