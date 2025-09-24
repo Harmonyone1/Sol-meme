@@ -1,8 +1,13 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "Node",
     "jsx": "react-jsx",
-    "baseUrl": "."
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true
   },
   "include": [
     "next-env.d.ts",
@@ -11,4 +16,3 @@
   ],
   "exclude": ["node_modules"]
 }
-
