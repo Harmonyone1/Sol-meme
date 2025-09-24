@@ -1,3 +1,6 @@
+import Heartbeat from './components/Heartbeat';
+import TokenChart from './components/TokenChart';
+
 export default function Page() {
   return (
     <div>
@@ -14,7 +17,11 @@ export default function Page() {
         <div style={{ opacity: 0.7, fontSize: 12, marginBottom: 6 }}>Live Feed</div>
         <div style={{ fontSize: 13 }}>Connect API + WS to see events here.</div>
       </div>
+      {/* Live heartbeat from API WS */}
+      <Heartbeat />
+
+      {/* Sample chart for a placeholder mint */}
+      <TokenChart mint="So11111111111111111111111111111111111111112" />
     </div>
   );
 }
-

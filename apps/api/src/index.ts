@@ -3,6 +3,13 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
+import IORedis from 'ioredis';
+import { healthRoute } from './health';
+import { ohlcRoute } from './ohlc';
+import { apiKeyAuth } from './auth';
+import { postStrategy } from './routes/strategies';
+import { postTradeSimulate } from './routes/trades';
+import { postKillSwitch } from './routes/execution';
 
 dotenv.config();
 
@@ -12,10 +19,14 @@ app.use(express.json());
 const ALLOWED_ORIGINS = process.env.WEB_ORIGIN ? [process.env.WEB_ORIGIN] : [/\.vercel\.app$/];
 app.use(cors({ origin: ALLOWED_ORIGINS, credentials: false }));
 
-app.get('/healthz', async (_req, res) => {
-  // TODO: check DB, Redis, RPC reachability here
-  res.json({ ok: true, time: new Date().toISOString() });
-});
+const redis = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379');
+app.get('/healthz', healthRoute(redis));
+app.get('/api/tokens/:mint/ohlc', ohlcRoute);
+
+// Authenticated routes when API_KEY is set
+app.post('/api/strategies', apiKeyAuth, postStrategy);
+app.post('/api/trades/simulate', apiKeyAuth, postTradeSimulate);
+app.post('/api/execution/kill', apiKeyAuth, postKillSwitch(redis));
 
 app.post('/webhooks/helius', (req, res) => {
   // TODO: verify HMAC, enqueue event
