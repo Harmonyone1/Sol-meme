@@ -10,6 +10,7 @@ import { apiKeyAuth } from './auth';
 import { postStrategy } from './routes/strategies';
 import { postTradeSimulate } from './routes/trades';
 import { postKillSwitch } from './routes/execution';
+import { getStrategies, getTrades } from './routes/read';
 
 dotenv.config();
 
@@ -20,8 +21,11 @@ const ALLOWED_ORIGINS = process.env.WEB_ORIGIN ? [process.env.WEB_ORIGIN] : [/\.
 app.use(cors({ origin: ALLOWED_ORIGINS, credentials: false }));
 
 const redis = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379');
+const sub = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379');
 app.get('/healthz', healthRoute(redis));
 app.get('/api/tokens/:mint/ohlc', ohlcRoute);
+app.get('/api/strategies', getStrategies);
+app.get('/api/trades', getTrades);
 
 // Authenticated routes when API_KEY is set
 app.post('/api/strategies', apiKeyAuth, postStrategy);
@@ -46,11 +50,29 @@ const server = createServer(app);
 // Minimal WS broadcast (health/heartbeat placeholder)
 const wss = new WebSocketServer({ server, path: '/ws' });
 wss.on('connection', (ws) => {
-  ws.send(JSON.stringify({ type: 'hello', ts: new Date().toISOString() }));
+  ws.send(JSON.stringify({ channel: 'hello', payload: { ts: new Date().toISOString() } }));
 });
 
+// Bridge Redis pub/sub -> WS
+const CHANNELS = ['scanner', 'trades', 'alerts', 'health'] as const;
+sub.subscribe(...CHANNELS, (err) => {
+  if (err) console.error('Redis SUB error', err);
+});
+sub.on('message', (channel, message) => {
+  const envelope = { channel, payload: safeParse(message) };
+  const data = JSON.stringify(envelope);
+  wss.clients.forEach((c) => {
+    try { c.send(data); } catch {}
+  });
+});
+
+function safeParse(s: string) {
+  try { return JSON.parse(s); } catch { return s; }
+}
+
+// Local heartbeat to WS
 setInterval(() => {
-  const msg = JSON.stringify({ type: 'health', payload: { ok: true, ts: new Date().toISOString() } });
+  const msg = JSON.stringify({ channel: 'health', payload: { ok: true, ts: new Date().toISOString() } });
   wss.clients.forEach((c) => {
     try { c.send(msg); } catch {}
   });

@@ -6,6 +6,7 @@ import { Queue, Worker, QueueEvents, JobsOptions } from 'bullmq';
 dotenv.config();
 
 const connection = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379');
+const pub = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379');
 
 const queues = {
   scanner: new Queue('scanner', { connection }),
@@ -44,8 +45,20 @@ async function main() {
   }, { connection });
 
   // Example: enqueue periodic heartbeat jobs (optional)
+  // Publish periodic health and a mock scanner candidate
   setInterval(() => {
-    queues.scanner.add('heartbeat', { ts: Date.now() }, defaultJobOpts).catch(() => {});
+    const ts = new Date().toISOString();
+    pub.publish('health', JSON.stringify({ worker: 'ok', ts })).catch(() => {});
+    const cand = {
+      id: Math.random().toString(36).slice(2),
+      mint: 'So11111111111111111111111111111111111111112',
+      score: Math.round(Math.random() * 1000) / 10,
+      tvlUsd: 75000 + Math.round(Math.random() * 25000),
+      ageMin: 10 + Math.floor(Math.random() * 50),
+      impactBps: 50 + Math.floor(Math.random() * 100),
+      flags: { freeze: false, clawback: false }
+    };
+    pub.publish('scanner', JSON.stringify(cand)).catch(() => {});
   }, 60_000);
 
   heartbeat();
