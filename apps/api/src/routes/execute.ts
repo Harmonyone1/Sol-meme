@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import IORedis from 'ioredis';
 import { Queue } from 'bullmq';
-import { prisma } from '../../../../packages/db/src';
+import { prisma } from '../db';
 
 export function postExecute(redis: IORedis) {
   const executorQ = new Queue('executor', { connection: redis as any });
@@ -33,4 +33,3 @@ export async function getJupiterQuote(_req: Request, res: Response) {
   // TODO: Proxy to Jupiter v6 with caching
   res.json({ ok: true, quote: { price: 1.0, outAmount: 0.0 } });
 }
-

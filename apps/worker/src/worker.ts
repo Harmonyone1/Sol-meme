@@ -2,7 +2,7 @@ import { setTimeout as sleep } from 'timers/promises';
 import dotenv from 'dotenv';
 import IORedis from 'ioredis';
 import { Queue, Worker, QueueEvents, JobsOptions } from 'bullmq';
-import { prisma } from '../../../packages/db/src';
+import { prisma } from './db';
 import { fetchMintInfo } from './enrichment/mint';
 import { fetchPoolState } from './enrichment/pool';
 import { fetchHoldersSnapshot } from './enrichment/holders';

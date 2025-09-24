@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { prisma } from '../../../../packages/db/src';
+import { prisma } from '../db';
 
 export async function getCandidates(_req: Request, res: Response) {
   const items = await prisma.candidate.findMany({ orderBy: { createdAt: 'desc' }, take: 200 });
@@ -29,4 +29,3 @@ export async function getStrategyById(req: Request, res: Response) {
   if (!item) return res.status(404).json({ ok: false, error: 'not_found' });
   res.json({ ok: true, item });
 }
-

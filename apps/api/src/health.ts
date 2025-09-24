@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import IORedis from 'ioredis';
-import { prisma } from '../../../packages/db/src';
+import { prisma } from './db';
 import { fetchJson } from './utils';
 
 export async function healthHandler(redis: IORedis): Promise<Record<string, unknown>> {

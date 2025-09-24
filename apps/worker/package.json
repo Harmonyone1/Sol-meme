@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/worker.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/worker.js"
+    "start": "node dist/worker.js",
+    "postinstall": "prisma generate --schema prisma/schema.prisma"
   },
   "dependencies": {
     "bullmq": "^5.7.5",
