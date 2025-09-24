@@ -22,7 +22,15 @@ const app = express();
 app.use(express.json());
 
 const ALLOWED_ORIGINS = process.env.WEB_ORIGIN ? [process.env.WEB_ORIGIN] : [/\.vercel\.app$/];
-app.use(cors({ origin: ALLOWED_ORIGINS, credentials: false }));
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    if (ALLOWED_ORIGINS.some((o) => (o instanceof RegExp ? o.test(origin) : o === origin))) return cb(null, true);
+    return cb(null, false);
+  },
+  credentials: false
+}));
+app.get('/', (_req, res) => res.status(200).json({ ok: true, service: 'api', ts: new Date().toISOString() }));
 
 const redis = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379');
 const sub = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379');
