@@ -1,0 +1,49 @@
+{
+  "name": "Momentum (Conservative)",
+  "env": "mainnet-small",
+  "filters": {
+    "poolAgeMinMin": 10,
+    "tvlUsdMin": 75000,
+    "priceImpactBpsMax": 150,
+    "ban": [
+      "freeze",
+      "clawback",
+      "transferFee"
+    ],
+    "mintRenounced": true
+  },
+  "weights": {
+    "liquidity": 0.25,
+    "uniques10m": 0.2,
+    "volume10m": 0.2,
+    "momentumZ": 0.15,
+    "holderConcentration": 0.2
+  },
+  "sizing": {
+    "maxTradeUsd": 1500,
+    "maxPctTvl": 0.5,
+    "maxConcurrent": 3
+  },
+  "exits": {
+    "tp": [
+      0.2,
+      0.4
+    ],
+    "trail": 0.2,
+    "hardStop": 0.1,
+    "timeExitMin": 45
+  },
+  "execution": {
+    "router": "jupiter-first",
+    "raydiumFallback": true,
+    "priority": {
+      "mode": "auto",
+      "cap": 60000
+    },
+    "jito": {
+      "enabled": true,
+      "tipMin": 0.0001,
+      "tipMax": 0.0004
+    }
+  }
+}

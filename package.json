@@ -1,0 +1,17 @@
+{
+  "name": "solana-memebot-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "echo 'Build packages/apps independently'",
+    "dev:web": "pnpm -C apps/web dev",
+    "dev:api": "pnpm -C apps/api dev",
+    "dev:worker": "pnpm -C apps/worker dev"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
