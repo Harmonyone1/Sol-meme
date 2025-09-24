@@ -2,7 +2,7 @@
   "name": "@memebot/api",
   "version": "0.0.1",
   "private": true,
-  "type": "module",
+  "type": "commonjs",
   "prisma": {
     "schema": "prisma/schema.prisma"
   },
@@ -10,7 +10,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc -p tsconfig.json",
     "prestart": "prisma generate --schema prisma/schema.prisma || prisma generate --schema ./schema.prisma; tsc -p tsconfig.json",
-    "start": "node dist/src/index.js"
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "express": "^4.19.0",

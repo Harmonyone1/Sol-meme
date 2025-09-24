@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ES2022",
+    "module": "CommonJS",
     "moduleResolution": "Node",
     "resolveJsonModule": true,
     "esModuleInterop": true,
@@ -10,11 +10,8 @@
     "strict": true,
     "declaration": false,
     "sourceMap": true,
-    "rootDir": ".",
+    "rootDir": "src",
     "outDir": "dist"
   },
-  "include": [
-    "src",
-    "../../packages/db/src"
-  ]
+  "include": ["src"]
 }
