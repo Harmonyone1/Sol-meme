@@ -6,37 +6,8 @@ on:
     branches: [ main ]
 
 jobs:
-  migrate:
-    name: Run Prisma Migrations
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install deps
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Generate Prisma Client
-        run: pnpm -C packages/db prisma:generate
-
-      - name: Migrate deploy
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: pnpm -C packages/db prisma:deploy
-
   deploy:
-    name: Deploy to Railway
-    needs: migrate
+    name: Migrate and Deploy to Railway
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -50,14 +21,26 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
 
+      - name: Install deps
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm -C packages/db prisma:generate
+
+      - name: Run migrations inside Railway (API env)
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway run --service ${{ vars.RAILWAY_API_SERVICE || 'api' }} -- pnpm -C packages/db prisma:deploy
+
       - name: Deploy API service
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         working-directory: apps/api
-        run: railway up --service ${{ secrets.RAILWAY_API_SERVICE || 'api' }}
+        run: railway up --service ${{ vars.RAILWAY_API_SERVICE || 'api' }}
 
       - name: Deploy Worker service
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         working-directory: apps/worker
-        run: railway up --service ${{ secrets.RAILWAY_WORKER_SERVICE || 'worker' }}
+        run: railway up --service ${{ vars.RAILWAY_WORKER_SERVICE || 'worker' }}
