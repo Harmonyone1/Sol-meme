@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 import IORedis from 'ioredis';
 import { getScannerQueue } from '../queues';
 
@@ -32,4 +32,3 @@ export function heliusWebhook(redis: IORedis) {
     }
   };
 }
-
