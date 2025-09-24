@@ -15,6 +15,7 @@
     "ws": "^8.17.0",
     "dotenv": "^16.4.0",
     "ioredis": "^5.4.1",
+    "bullmq": "^5.7.5",
     "@prisma/client": "^5.20.0"
   },
   "devDependencies": {

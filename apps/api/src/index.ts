@@ -10,6 +10,7 @@ import { apiKeyAuth } from './auth';
 import { postStrategy } from './routes/strategies';
 import { postTradeSimulate } from './routes/trades';
 import { postKillSwitch } from './routes/execution';
+import { postExecute, getKillStatus, getJupiterQuote } from './routes/execute';
 import { getStrategies, getTrades } from './routes/read';
 
 dotenv.config();
@@ -26,11 +27,14 @@ app.get('/healthz', healthRoute(redis));
 app.get('/api/tokens/:mint/ohlc', ohlcRoute);
 app.get('/api/strategies', getStrategies);
 app.get('/api/trades', getTrades);
+app.get('/api/execution/kill', getKillStatus(redis));
+app.get('/api/quotes/jupiter', getJupiterQuote);
 
 // Authenticated routes when API_KEY is set
 app.post('/api/strategies', apiKeyAuth, postStrategy);
 app.post('/api/trades/simulate', apiKeyAuth, postTradeSimulate);
 app.post('/api/execution/kill', apiKeyAuth, postKillSwitch(redis));
+app.post('/api/trades/execute', apiKeyAuth, postExecute(redis));
 
 app.post('/webhooks/helius', (req, res) => {
   // TODO: verify HMAC, enqueue event
