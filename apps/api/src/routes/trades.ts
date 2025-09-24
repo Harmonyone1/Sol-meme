@@ -14,4 +14,3 @@ export async function postTradeSimulate(req: Request, res: Response) {
     res.status(400).json({ ok: false, error: err?.message });
   }
 }
-

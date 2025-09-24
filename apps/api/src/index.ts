@@ -45,12 +45,12 @@ app.post('/api/trades/simulate', apiKeyAuth, postTradeSimulate);
 app.post('/api/execution/kill', apiKeyAuth, postKillSwitch(redis));
 app.post('/api/trades/execute', apiKeyAuth, postExecute(redis));
 
-app.post('/webhooks/helius', (req, res) => {
+app.post('/webhooks/helius', (req: any, res: any) => {
   // TODO: verify HMAC, enqueue event
   res.status(200).end();
 });
 
-app.post('/webhooks/jito', (req, res) => {
+app.post('/webhooks/jito', (req: any, res: any) => {
   // TODO: verify, handle bundle status
   res.status(200).end();
 });
@@ -62,7 +62,7 @@ const server = createServer(app);
 
 // Minimal WS broadcast (health/heartbeat placeholder)
 const wss = new WebSocketServer({ server, path: '/ws' });
-wss.on('connection', (ws) => {
+wss.on('connection', (ws: any) => {
   ws.send(JSON.stringify({ channel: 'hello', payload: { ts: new Date().toISOString() } }));
 });
 
@@ -74,7 +74,7 @@ sub.subscribe(...CHANNELS, (err) => {
 sub.on('message', (channel, message) => {
   const envelope = { channel, payload: safeParse(message) };
   const data = JSON.stringify(envelope);
-  wss.clients.forEach((c) => {
+  wss.clients.forEach((c: any) => {
     try { c.send(data); } catch {}
   });
 });
@@ -86,7 +86,7 @@ function safeParse(s: string) {
 // Local heartbeat to WS
 setInterval(() => {
   const msg = JSON.stringify({ channel: 'health', payload: { ok: true, ts: new Date().toISOString() } });
-  wss.clients.forEach((c) => {
+  wss.clients.forEach((c: any) => {
     try { c.send(msg); } catch {}
   });
 }, 30_000);

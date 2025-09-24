@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { prisma } from '../../../../packages/db/src';
+import { prisma } from '../db';
 
 // POST /api/strategies
 // If body.id present -> update; else create.
@@ -27,4 +27,3 @@ export async function postStrategy(req: Request, res: Response) {
     res.status(400).json({ ok: false, error: err?.message });
   }
 }
-
