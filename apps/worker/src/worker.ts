@@ -3,6 +3,11 @@ import dotenv from 'dotenv';
 import IORedis from 'ioredis';
 import { Queue, Worker, QueueEvents, JobsOptions } from 'bullmq';
 import { prisma } from '../../../packages/db/src';
+import { fetchMintInfo } from './enrichment/mint';
+import { fetchPoolState } from './enrichment/pool';
+import { fetchHoldersSnapshot } from './enrichment/holders';
+import { applyRiskFilters } from './risk';
+import { score as scoreComposite } from './scoring';
 
 dotenv.config();
 
@@ -95,31 +100,46 @@ async function main() {
 }
 
 async function processCandidate(raw: any) {
-  // Enrichment (stubbed)
+  const rpc = process.env.RPC_PRIMARY_URL || '';
   const mint = String(raw?.mint ?? raw?.token ?? 'So11111111111111111111111111111111111111112');
-  const tvlUsd = Number(raw?.tvlUsd ?? 100000 + Math.random() * 50000);
-  const ageMin = Number(raw?.ageMin ?? 10 + Math.floor(Math.random() * 120));
-  const impactBps = Number(raw?.impactBps ?? 50 + Math.floor(Math.random() * 100));
-  const flagsJson = { freeze: false, clawback: false, transferFee: false };
-  // Risk filters (simplified)
-  if (ageMin < 10) throw new Error('Too young');
-  if (tvlUsd < 75000) throw new Error('Low TVL');
-  if (impactBps > 150) throw new Error('High impact');
-  // Score per docs (simplified weighted sum)
-  const score = scoreCandidate({ tvlUsd, uniques10m: 50, volume10m: 100000, momentumZ: 0.5, holderConcentration: 0.2 });
-  const created = await prisma.candidate.create({ data: { mint, pool: null, score, tvlUsd, ageMin, impactBps, flagsJson } });
-  return created;
-}
+  const pool = raw?.pool ?? null;
+  const notionalUsd = Number(process.env.SCANNER_NOTIONAL_USD || 1500);
 
-function scoreCandidate(f: { tvlUsd: number; uniques10m: number; volume10m: number; momentumZ: number; holderConcentration: number; }) {
+  const [mintInfo, poolState, holders] = await Promise.all([
+    fetchMintInfo(rpc, mint),
+    fetchPoolState(rpc, pool, notionalUsd),
+    fetchHoldersSnapshot(rpc, mint)
+  ]);
+
+  const riskCfg = {
+    poolAgeMinMin: Number(process.env.RISK_POOL_AGE_MIN || 10),
+    tvlUsdMin: Number(process.env.RISK_TVL_MIN || 75000),
+    priceImpactBpsMax: Number(process.env.RISK_IMPACT_MAX_BPS || 150),
+    requireRenouncedMint: true
+  };
+  const risk = applyRiskFilters(mintInfo, poolState, riskCfg);
+  if (!risk.pass) throw new Error(`Risk filter: ${risk.reason}`);
+
+  const feat = {
+    tvlUsd: poolState.tvlUsd,
+    uniques10m: Number(raw?.uniques10m ?? 50),
+    volume10m: Number(raw?.volume10m ?? 100000),
+    momentumZ: Number(raw?.momentumZ ?? 0.5),
+    holderConcentration: Number(holders.top5Pct)
+  };
   const weights = { liquidity: 0.25, uniques10m: 0.2, volume10m: 0.2, momentumZ: 0.15, holderConcentration: 0.2 };
-  const liquidityScore = Math.min(1, f.tvlUsd / 150000);
-  const uniquesScore = Math.min(1, f.uniques10m / 200);
-  const volumeScore = Math.min(1, f.volume10m / 200000);
-  const momentumScore = Math.max(0, Math.min(1, (f.momentumZ + 3) / 6));
-  const concentrationScore = 1 - Math.min(1, f.holderConcentration);
-  const composite = liquidityScore * weights.liquidity + uniquesScore * weights.uniques10m + volumeScore * weights.volume10m + momentumScore * weights.momentumZ + concentrationScore * weights.holderConcentration;
-  return Math.round(composite * 1000) / 10; // 0..100
+  const score = scoreComposite(feat, weights);
+
+  const created = await prisma.candidate.create({ data: {
+    mint,
+    pool,
+    score,
+    tvlUsd: poolState.tvlUsd,
+    ageMin: poolState.ageMin,
+    impactBps: poolState.impactBpsAtNotional,
+    flagsJson: mintInfo
+  }});
+  return created;
 }
 
 main().catch(err => {
