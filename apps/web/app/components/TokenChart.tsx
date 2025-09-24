@@ -5,7 +5,9 @@ import { useEffect, useRef } from 'react';
 
 type Point = { t: number; o: number; h: number; l: number; c: number };
 
-export default function TokenChart({ mint }: { mint: string }) {
+type Marker = { time: number; position: 'aboveBar' | 'belowBar'; color: string; text: string };
+
+export default function TokenChart({ mint, markers }: { mint: string; markers?: Marker[] }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -30,6 +32,11 @@ export default function TokenChart({ mint }: { mint: string }) {
         const rows = (data.series as Point[]).map((p) => ({ time: Math.floor(p.t / 1000), open: p.o, high: p.h, low: p.l, close: p.c }));
         // Cast for TS; library expects UTCTimestamp type alias
         series.setData(rows as any);
+        if (markers && markers.length) {
+          // Convert to library marker shape
+          const m = markers.map((mk) => ({ time: Math.floor(mk.time), position: mk.position, color: mk.color, shape: mk.position === 'belowBar' ? 'arrowUp' : 'arrowDown', text: mk.text })) as any;
+          series.setMarkers(m);
+        }
       } catch (e) {
         // ignore
       }
@@ -45,7 +52,7 @@ export default function TokenChart({ mint }: { mint: string }) {
       window.removeEventListener('resize', onResize);
       chart.remove();
     };
-  }, [mint]);
+  }, [mint, JSON.stringify(markers)]);
 
   return (
     <div style={{ marginTop: 12, padding: 12, background: '#121622', border: '1px solid #1b1f2a', borderRadius: 8 }}>
