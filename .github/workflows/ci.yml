@@ -21,10 +21,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
       - name: Install deps
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Generate Prisma Client
         run: pnpm -C packages/db prisma:generate
@@ -37,4 +36,3 @@ jobs:
 
       - name: Build Web
         run: pnpm -C apps/web build
-
