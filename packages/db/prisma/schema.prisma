@@ -68,7 +68,7 @@ model Position {
   pnlUnrealized Float    @default(0)
   updatedAt     DateTime @updatedAt
   trade         Trade?   @relation(fields: [tradeId], references: [id])
-  tradeId       String?
+  tradeId       String?  @unique
 }
 
 model Integration {
@@ -87,4 +87,3 @@ model Alert {
   createdAt    DateTime @default(now())
   acknowledgedAt DateTime?
 }
-
