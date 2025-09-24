@@ -28,7 +28,8 @@ export default function TokenChart({ mint }: { mint: string }) {
         const resp = await fetch(url);
         const data = await resp.json();
         const rows = (data.series as Point[]).map((p) => ({ time: Math.floor(p.t / 1000), open: p.o, high: p.h, low: p.l, close: p.c }));
-        series.setData(rows);
+        // Cast for TS; library expects UTCTimestamp type alias
+        series.setData(rows as any);
       } catch (e) {
         // ignore
       }
@@ -53,4 +54,3 @@ export default function TokenChart({ mint }: { mint: string }) {
     </div>
   );
 }
-
