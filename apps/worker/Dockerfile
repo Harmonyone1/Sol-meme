@@ -1,4 +1,4 @@
-﻿FROM cgr.dev/chainguard/node:20 AS base
+FROM cgr.dev/chainguard/node:20 AS base
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
@@ -20,7 +20,5 @@ COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/prisma ./prisma
 COPY --from=base /app/dist ./dist
 
-EXPOSE 8080
-CMD ["node", "dist/index.js"]
-
+CMD ["node", "dist/worker.js"]
 
