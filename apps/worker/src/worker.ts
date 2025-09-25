@@ -65,6 +65,10 @@ async function main() {
       console.warn('Kill switch active; skipping execution');
       return;
     }
+    // Guardrails: priority fee and tip caps (placeholders for now)
+    const feeCap = Number(process.env.PRIORITY_FEE_CAP || 60000);
+    const jitoTipCap = Number(process.env.JITO_TIP_CAP_LAMPORTS || 2_000_000); // 0.002 SOL default
+    // TODO: when integrating real transaction building, enforce caps here
     // Create Trade row (pending)
     const trade = await prisma.trade.create({ data: {
       strategyId: strategyId ?? 'unknown',
@@ -76,7 +80,7 @@ async function main() {
       status: 'pending'
     }});
     // TODO: call Jupiter for real quote/build and send via RPC/Jito
-    const realized = { price: 1.01, slipBps: 30 };
+    const realized = { price: 1.01, slipBps: 30, priorityFee: Math.min(50_000, feeCap), jitoTipLamports: Math.min(1_000_000, jitoTipCap) };
     const updated = await prisma.trade.update({ where: { id: trade.id }, data: { status: 'confirmed', realizedJson: realized, txSig: 'stub' } });
     await pub.publish('trades', JSON.stringify(updated));
   }, { connection });
