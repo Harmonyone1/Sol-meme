@@ -21,7 +21,21 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-const ALLOWED_ORIGINS = process.env.WEB_ORIGIN ? [process.env.WEB_ORIGIN] : [/\.vercel\.app$/];
+// CORS: support comma-separated WEB_ORIGIN, wildcard "*", and simple regex via "regex:/.../"
+const originsEnv = (process.env.WEB_ORIGIN || '').trim();
+const ALLOWED_ORIGINS: (string | RegExp)[] = originsEnv
+  ? originsEnv.split(',').map((s) => s.trim()).filter(Boolean).map((s) => {
+      if (s === '*') return /.*/;
+      if (s.startsWith('regex:')) {
+        try { return new RegExp(s.slice(6)); } catch { return s; }
+      }
+      if (s.includes('*')) {
+        const esc = s.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+        return new RegExp('^' + esc + '$');
+      }
+      return s;
+    })
+  : [/\.vercel\.app$/];
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
