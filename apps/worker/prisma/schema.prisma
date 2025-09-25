@@ -1,0 +1,90 @@
+// Generated from docs/DB_SCHEMA.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Strategy {
+  id           String    @id @default(cuid())
+  name         String
+  status       String    @default("draft")
+  env          String
+  filtersJson  Json
+  weightsJson  Json
+  sizingJson   Json
+  exitsJson    Json
+  execJson     Json
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  trades       Trade[]
+  candidates   Candidate[]
+}
+
+model Candidate {
+  id          String    @id @default(cuid())
+  mint        String
+  pool        String?
+  score       Float
+  tvlUsd      Float?
+  ageMin      Int?
+  impactBps   Int?
+  flagsJson   Json
+  createdAt   DateTime  @default(now())
+  strategy    Strategy? @relation(fields: [strategyId], references: [id])
+  strategyId  String?
+}
+
+model Trade {
+  id               String    @id @default(cuid())
+  strategyId       String
+  mint             String
+  side             String
+  size             Float
+  quoteJson        Json
+  routeJson        Json
+  txSig            String?
+  status           String    @default("pending")
+  realizedJson     Json?
+  feeMicroLamports Int?
+  jitoTip          Float?
+  createdAt        DateTime  @default(now())
+  position         Position?
+  Strategy         Strategy  @relation(fields: [strategyId], references: [id])
+}
+
+model Position {
+  id            String   @id @default(cuid())
+  mint          String   @unique
+  size          Float
+  avgEntry      Float
+  stopsJson     Json?
+  tpsJson       Json?
+  pnlRealized   Float    @default(0)
+  pnlUnrealized Float    @default(0)
+  updatedAt     DateTime @updatedAt
+  trade         Trade?   @relation(fields: [tradeId], references: [id])
+  tradeId       String?  @unique
+}
+
+model Integration {
+  id            String   @id @default(cuid())
+  type          String
+  configJson    Json
+  status        String   @default("unknown")
+  lastHeartbeat DateTime?
+}
+
+model Alert {
+  id           String   @id @default(cuid())
+  type         String
+  severity     String
+  payloadJson  Json
+  createdAt    DateTime @default(now())
+  acknowledgedAt DateTime?
+}
+
