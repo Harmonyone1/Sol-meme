@@ -11,8 +11,10 @@ import { score as scoreComposite } from './scoring';
 
 dotenv.config();
 
-const connection = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379');
-const pub = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379');
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+const redisOpts = { maxRetriesPerRequest: null as any };
+const connection = new IORedis(redisUrl, redisOpts as any);
+const pub = new IORedis(redisUrl, redisOpts as any);
 
 const queues = {
   scanner: new Queue('scanner', { connection }),
